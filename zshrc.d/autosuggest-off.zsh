@@ -1,0 +1,1 @@
+typeset -g _ZSH_AUTOSUGGEST_DISABLED

@@ -1,0 +1,1 @@
+alias git-cram='git add . && git commit --amend --no-verify && git push --force-with-lease --no-verify'
