@@ -1,37 +1,21 @@
 #!/bin/bash
 
-# Download and install Tokyo Night Dark theme (not on Open VSX so we need the .vsix)
-THEME_URL="https://marketplace.visualstudio.com/_apis/public/gallery/publishers/drewxs/vsextensions/tokyo-night-dark/latest/vspackage"
-VSIX="/tmp/tokyo-night-dark.vsix"
-
-# Marketplace returns gzip-compressed content
-curl -sL "$THEME_URL" | gunzip > "$VSIX" 2>/dev/null || curl -sL -o "$VSIX" "$THEME_URL"
-
-# Install for VS Code and local Cursor
-cursor --install-extension "$VSIX" 2>/dev/null ||
-	code --install-extension "$VSIX" 2>/dev/null || true
-
-# Install into Cursor's remote server extensions directory.
-# On remote hosts like Gitpod, the cursor CLI doesn't exist and the
-# code CLI installs into VS Code's server — not Cursor's.
-mkdir -p "$HOME/.cursor-server/extensions"
-code --extensions-dir "$HOME/.cursor-server/extensions" \
-	--install-extension "$VSIX" 2>/dev/null || true
-
-rm -f "$VSIX"
+# Install Tokyo Night Dark theme. VS Code pulls it straight from the
+# Microsoft Marketplace, so no .vsix download is needed.
+code --install-extension drewxs.tokyo-night-dark 2>/dev/null || true
 
 SETTINGS_DIR="$(dirname "$0")"
 
-# Apply settings to local Cursor/VS Code
-mkdir -p "$HOME/.config/Cursor/User"
-cp "$SETTINGS_DIR/cursor-settings.json" "$HOME/.config/Cursor/User/settings.json"
+# Apply settings to local VS Code
+mkdir -p "$HOME/.config/Code/User"
+cp "$SETTINGS_DIR/vscode-settings.json" "$HOME/.config/Code/User/settings.json"
 
-# Apply settings to Cursor remote server (for Gitpod/SSH remotes)
-if [ -d "$HOME/.cursor-server/data/Machine" ]; then
+# Apply settings to the VS Code server (for Gitpod/SSH remotes)
+if [ -d "$HOME/.vscode-server/data/Machine" ]; then
 	python3 -c "
-import json, sys
-machine = '$HOME/.cursor-server/data/Machine/settings.json'
-dotfile = '$SETTINGS_DIR/cursor-settings.json'
+import json
+machine = '$HOME/.vscode-server/data/Machine/settings.json'
+dotfile = '$SETTINGS_DIR/vscode-settings.json'
 with open(machine) as f: existing = json.load(f)
 with open(dotfile) as f: overrides = json.load(f)
 existing.update(overrides)
