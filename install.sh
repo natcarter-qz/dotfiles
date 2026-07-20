@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Install Tokyo Night Dark theme. VS Code pulls it straight from the
+# Install Dracula theme. VS Code pulls it straight from the
 # Microsoft Marketplace, so no .vsix download is needed.
-code --install-extension drewxs.tokyo-night-dark 2>/dev/null || true
+code --install-extension dracula-theme.theme-dracula 2>/dev/null || true
 
 SETTINGS_DIR="$(dirname "$0")"
 
