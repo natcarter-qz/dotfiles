@@ -23,28 +23,34 @@ with open(dst, 'w') as f:
     json.dump(settings, f, indent=4)
 EOF
 
-# Install the Dracula theme by unpacking its .vsix straight into the
-# server's extensions dir (no `code` CLI exists at init time)
-EXT_ID="dracula-theme.theme-dracula"
+# Install extensions by unpacking their .vsix straight into the server's
+# extensions dir (no `code` CLI exists at init time). Third arg is the
+# targetPlatform for platform-specific extensions.
 EXT_DIR="$HOME/.vscode-server/extensions"
-if ! ls -d "$EXT_DIR/$EXT_ID"-* >/dev/null 2>&1; then
-	URL="https://marketplace.visualstudio.com/_apis/public/gallery/publishers/dracula-theme/vsextensions/theme-dracula/latest/vspackage"
+install_extension() {
+	PUBLISHER="$1" NAME="$2" PLATFORM="$3"
+	ls -d "$EXT_DIR/$PUBLISHER.$NAME"-* >/dev/null 2>&1 && return
+	URL="https://marketplace.visualstudio.com/_apis/public/gallery/publishers/$PUBLISHER/vsextensions/$NAME/latest/vspackage${PLATFORM:+?targetPlatform=$PLATFORM}"
 	VSIX="$(mktemp)"
 	# Marketplace returns gzip-compressed content
 	curl -sL "$URL" | gunzip > "$VSIX" 2>/dev/null || curl -sL -o "$VSIX" "$URL"
-	python3 - "$VSIX" "$EXT_DIR" "$EXT_ID" <<'EOF'
+	python3 - "$VSIX" "$EXT_DIR" "$PUBLISHER.$NAME" "$PLATFORM" <<'EOF'
 import json, os, shutil, sys, tempfile, zipfile
-vsix, ext_dir, ext_id = sys.argv[1], sys.argv[2], sys.argv[3]
+vsix, ext_dir, ext_id, platform = sys.argv[1:5]
 tmp = tempfile.mkdtemp()
 zipfile.ZipFile(vsix).extractall(tmp)
 with open(f'{tmp}/extension/package.json') as f:
     version = json.load(f)['version']
+suffix = f'-{platform}' if platform else ''
 os.makedirs(ext_dir, exist_ok=True)
-shutil.move(f'{tmp}/extension', f'{ext_dir}/{ext_id}-{version}')
+shutil.move(f'{tmp}/extension', f'{ext_dir}/{ext_id}-{version}{suffix}')
 shutil.rmtree(tmp, ignore_errors=True)
 EOF
 	rm -f "$VSIX"
-fi
+}
+
+install_extension drewxs tokyo-night-dark
+install_extension anthropic claude-code
 
 # Prebuild clones can be hours stale — bring the workspace repo current,
 # using the repo's own `git up` alias when it defines one
