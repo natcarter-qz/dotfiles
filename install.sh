@@ -45,3 +45,16 @@ shutil.rmtree(tmp, ignore_errors=True)
 EOF
 	rm -f "$VSIX"
 fi
+
+# Extend workspace timeout (Flex `gitpod` CLI, falling back to classic `gp`)
+gitpod timeout set 8h 2>/dev/null || gp timeout set 8h || true
+
+# Interactive-shell tweaks, appended to zshrc once
+if ! grep -q git-cram "$HOME/.zshrc" 2>/dev/null; then
+	cat >> "$HOME/.zshrc" <<'EOF'
+
+# --- from dotfiles ---
+alias git-cram='git add . && git commit --amend --no-verify && git push --force-with-lease --no-verify'
+(( $+functions[_zsh_autosuggest_disable] )) && _zsh_autosuggest_disable
+EOF
+fi
