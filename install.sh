@@ -46,6 +46,9 @@ EOF
 	rm -f "$VSIX"
 fi
 
+# Prebuild clones can be hours stale — bring the workspace repo current
+[ -n "$GITPOD_REPO_ROOT" ] && git -C "$GITPOD_REPO_ROOT" pull --rebase --autostash || true
+
 # Extend workspace timeout (Flex `gitpod` CLI, falling back to classic `gp`)
 gitpod timeout set 8h 2>/dev/null || gp timeout set 8h || true
 
